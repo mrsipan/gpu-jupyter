@@ -28,9 +28,15 @@ RUN set -ex \
     torchaudio==0.13.1 \
     torchviz==0.0.2 \
 ' \
- && pip install --no-cache-dir $buildDeps --extra-index-url https://download.pytorch.org/whl/cu116 \
+ && pip install --no-cache-dir $buildDeps --extra-index-url https://download.pytorch.org/whl/cu117 \
  && fix-permissions "${CONDA_DIR}" \
  && fix-permissions "/home/${NB_USER}"
+
+COPY --chown=${NB_UID} requirements-build.txt /requirements-build.txt
+
+RUN pip install --no-cache-dir -r '/requirements-build.txt' \
+    && fix-permissions "${CONDA_DIR}" \
+    && fix-permissions "/home/${NB_USER}" 
 
 USER root
 ENV CUDA_PATH=/opt/conda/

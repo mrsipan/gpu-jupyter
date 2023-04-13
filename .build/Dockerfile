@@ -7,7 +7,7 @@
 
 # Use NVIDIA CUDA as base image and run the same installation as in the other packages.
 # The version of cuda must match those of the packages installed in src/Dockerfile.gpulibs
-FROM nvidia/cuda:11.6.2-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 LABEL authors="Christoph Schranz <christoph.schranz@salzburgresearch.at>, Mathematical Michael <consistentbayes@gmail.com>"
 # This is a concatenated Dockerfile, the maintainers of subsequent sections may vary.
 RUN chmod 1777 /tmp && chmod 1777 /var/tmp
@@ -349,9 +349,15 @@ RUN set -ex \
     torchaudio==0.13.1 \
     torchviz==0.0.2 \
 ' \
- && pip install --no-cache-dir $buildDeps --extra-index-url https://download.pytorch.org/whl/cu116 \
+ && pip install --no-cache-dir $buildDeps --extra-index-url https://download.pytorch.org/whl/cu117 \
  && fix-permissions "${CONDA_DIR}" \
  && fix-permissions "/home/${NB_USER}"
+
+COPY --chown=${NB_UID} requirements-build.txt /requirements-build.txt
+
+RUN pip install --no-cache-dir -r '/requirements-build.txt' \
+    && fix-permissions "${CONDA_DIR}" \
+    && fix-permissions "/home/${NB_USER}" 
 
 USER root
 ENV CUDA_PATH=/opt/conda/
@@ -384,6 +390,16 @@ USER root
 # Install useful packages and Graphviz
 RUN apt-get update \
  && apt-get -y install --no-install-recommends htop apt-utils iputils-ping graphviz libgraphviz-dev openssh-client \
+    ca-certificates \
+    cmake \
+    curl \
+    dnsutils \
+    git \
+    iputils-ping \
+    libgl1 \
+    python3-pip \
+    tini \
+    libglib2.0-0 \
  && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 USER $NB_UID
